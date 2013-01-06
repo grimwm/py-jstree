@@ -20,6 +20,7 @@ setup(
     ],
   description='',
   long_description=read('README.txt') if os.path.exists('README.txt') else '',
+  requires=['dictobj'],
   py_modules=['jstree'],
   test_suite='jstree_test',
   )
