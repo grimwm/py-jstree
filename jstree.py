@@ -58,7 +58,6 @@ class JSTree(object):
 
   @property
   def data(self):
-    return self._root
+    return dictobj.DictionaryObject(self._root)
 
-  def __str__(self):
-    return str(self.asdict())
+  # __repr__ = lambda self: "%s(%s)" % (type(self).__name__, dictobj.DictionaryObject(self._root))
