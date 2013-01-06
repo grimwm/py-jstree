@@ -2,6 +2,7 @@ import dictobj
 import collections
 import os
 
+# TODO Update this to be a DictionaryObject.  Else we're going to repeat a lot of code.
 class JSTree(object):
   @staticmethod
   def _node(data, children={}):
@@ -59,5 +60,3 @@ class JSTree(object):
   @property
   def data(self):
     return dictobj.DictionaryObject(self._root)
-
-  # __repr__ = lambda self: "%s(%s)" % (type(self).__name__, dictobj.DictionaryObject(self._root))
