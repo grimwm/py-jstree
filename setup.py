@@ -18,7 +18,7 @@ setup(
     'Programming Language :: Python',
     'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-  description='',
+  description='A package that helps generate JSON data for jQuery jsTree.',
   long_description=read('README.txt') if os.path.exists('README.txt') else '',
   requires=['dictobj'],
   py_modules=['jstree'],
