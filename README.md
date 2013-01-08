@@ -6,8 +6,6 @@ An introduction will be proposed later.
 Installation
 ------------
 
-NOTE: The below instructions are not yet usable.
-
 If you have Python installed and wish to get the package directly from the
 [Python Package Index](http://pypi.python.org/pypi/jstree), just run
 `pip install jstree` from the command-line.  If you already have a prior
