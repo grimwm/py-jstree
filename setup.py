@@ -14,7 +14,7 @@ def read(filename):
 
 setup(
   name='jstree',
-  version='0.1.1',
+  version='0.1.2',
   author='William Grim',
   author_email='william@grimapps.com',
   url='https://github.com/grimwm/py-jstree',
@@ -27,7 +27,7 @@ setup(
     ],
   description='A package that helps generate JSON data for jQuery jsTree.',
   long_description=read('README.txt') if os.path.exists('README.txt') else '',
-  requires=['dictobj'],
+  install_requires=['dictobj'],
   py_modules=['jstree'],
   test_suite='jstree_test',
   )
