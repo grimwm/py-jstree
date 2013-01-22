@@ -2,24 +2,108 @@ import dictobj
 import collections
 import os
 
-class Node(dictobj.MutableDictionaryObject):
+class JSTNode(dictobj.DictionaryObject):
   """
-  This class mainly exists for its "json" method so it can help
-  generate JSON without putting a lot of logic in the JSTree for it.
+  This class exists as a helper to the JSTree.  Its "jsonData" method can
+  generate sub-tree JSON without putting the logic directly into the JSTree.
+
+  This data structure is only semi-immutable.  The JSTree uses a directly
+  iterative (i.e. no stack is managed) builder pattern to construct a
+  tree out of paths.  Therefore, the children are not known in advance, and
+  we have to keep the children attribute mutable.
   """
-  def __init__(self, data):
-    super(Node, self).__init__()
+  def __init__(self, data, **kwargs):
+    """
+    kwargs allows users to pass arbitrary information into a JSTNode that
+    will later be output in jsonData().  It allows for more advanced
+    configuration than the default path handling that JSTree currently allows.
+    For example, users may want to pass "attr" or "metadata" or some other
+    valid jsTree options.
+    
+    Example:
+      >>> import jstree
+      >>> node = jstree.JSTNode('a')
+      >>> print node
+      JSTNode({'data': 'a', 'children': MutableDictionaryObject({})})
+
+      >>> import jstree
+      >>> node = jstree.JSTNode('a', attr={'id':23})
+      >>> print node
+      JSTNode({'data': 'a', 'children': MutableDictionaryObject({}), 'attr': DictionaryObject({'id': 23})})
+    """
+    super(JSTNode, self).__init__()
+
+    children = kwargs.get('children', {})
+    if len(filter(lambda key: not isinstance(children[key], JSTNode), children)):
+      raise TypeError("One or more children were not instances of '%s'" % JSTNode.__name__)
+    if 'children' in kwargs:
+      del kwargs['children']
+    self._items['children'] = dictobj.MutableDictionaryObject(children)
+      
+    self._items.update(dictobj.DictionaryObject(**kwargs))
     self._items['data'] = data
-    self._items['children'] = dictobj.MutableDictionaryObject()
 
   def jsonData(self):
     children = [self.children[k].jsonData() for k in sorted(self.children)]
-    return {'data':self.data, 'children':children}
-  
-class JSTree(dictobj.MutableDictionaryObject):
+    if len(children):
+      return {'data':self.data, 'children':children}
+    else:
+      return {'data':self.data}
+    
+class JSTree(dictobj.DictionaryObject):
+  """
+  An immutable dictionary-like object that converts a list of "paths"
+  into a tree structure suitable for jQuery's jsTree.
+  """
   def __init__(self, paths=None, tree=None):
     """
-    Examples:
+    Example (basic usage):
+      >>> import jstree
+      >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
+      >>> t1 = jstree.JSTree(paths)
+      >>> t2 = jstree.JSTree(tree=t1)
+      >>> print t1 == t2
+      True
+    """
+    if paths is None and tree is None:
+      raise TypeError("Either 'paths' or 'tree' must be passed to '%s'" % JSTree.__name__)
+    if paths is not None and tree is not None:
+      raise TypeError("Only one of 'paths' or 'tree' may be passed to '%s'" % JSTree.__name__)
+
+    if paths is not None:
+      """
+      Take a list of paths and put them into a tree.  Paths with the same prefix should
+      be at the same level in the tree.
+      """
+      super(JSTree, self).__init__()
+      
+      root = JSTNode('')
+      for path in sorted(set(paths)):
+        curr = root
+        for subpath in path.split(os.path.sep):
+          if subpath not in curr.children:
+            curr.children[subpath] = JSTNode(subpath)
+          curr = curr.children[subpath]
+      self._items['_root'] = root
+
+    if tree is not None:
+      if isinstance(tree, JSTree):
+        """
+        Since our internal data structure is quite specific,
+        only allow initialization by other JSTrees.
+        """
+        # super(JSTree, self).__init__(tree)
+        super(JSTree, self).__init__()
+        self._items['_root'] = dictobj.DictionaryObject(tree._root)
+      else:
+        raise TypeError("'%tree' is not an instance of '%s'" % (JSTree.__name__))
+
+  def pretty(self, root=None, depth=0, spacing=2):
+    """
+    Create a "pretty print" represenation of the tree with customized indentation at each
+    level of the tree.
+    
+    Example:
     >>> import jstree
     >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
     >>> print jstree.JSTree(paths).pretty()
@@ -29,37 +113,6 @@ class JSTree(dictobj.MutableDictionaryObject):
           31/
             .classpath
             .project
-    """
-    if paths is None and tree is None:
-      raise TypeError("Either 'paths' or 'tree' must be passed to '%s'" % JSTree.__name__)
-    if paths is not None and tree is not None:
-      raise TypeError("Only one of 'paths' or 'tree' may be passed to '%s'" % JSTree.__name__)
-
-
-    if paths is not None:
-      super(JSTree, self).__init__()
-      
-      root = Node('')
-      for path in paths:
-        curr = root
-        for subpath in path.split(os.path.sep):
-          if subpath not in curr.children:
-            curr.children[subpath] = Node(subpath)
-          curr = curr.children[subpath]
-      self._items['_root'] = root
-
-    if tree is not None:
-      super(JSTree, self).__init__(tree)
-
-    # if tree is not None:
-    #   if isinstance(tree, JSTree):
-    #     self._root = dictobj.MutableDictionaryObject(tree._root)
-    #   else:
-    #     raise TypeError("'%tree' is not an instance of '%s'" % (JSTree.__name__))
-
-  def pretty(self, root=None, depth=0, spacing=2):
-    """
-    Create a "pretty print" represenation of the tree.
     """
     if root is None:
       root = self._root
@@ -72,9 +125,9 @@ class JSTree(dictobj.MutableDictionaryObject):
 
   def jsonData(self):
     """
-    Returns a copy of the internal tree with the root replaced
-    by a new type of "data" node that is represented as a list
-    of dictionaries, each of which are our internal nodes.
+    Returns a copy of the internal tree in a JSON-friendly format,
+    ready for consumption by jsTree.  The data is represented as a
+    list of dictionaries, each of which are our internal nodes.
 
     The logic behind this data-representation decision is due
     to a funny behavior in the jQuery jsTree requiring that the
@@ -88,24 +141,21 @@ class JSTree(dictobj.MutableDictionaryObject):
     >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
     >>> t = jstree.JSTree(paths)
     >>> d = t.jsonData()
-    >>> d['data']
-    [{'data': 'editor', 'children': [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}]}]}]
-    >>> d['data'][0]
-    {'data': 'editor', 'children': [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}]}]}
-    >>> d['data'][0]['children']
-    [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}]}]
-    >>> d['data'][0]['children'][0]
-    {'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}]}
-    >>> d['data'][0]['children'][0]['children']
-    [{'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}]
-    >>> d['data'][0]['children'][0]['children'][0]
-    {'data': '31', 'children': [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]}
-    >>> d['data'][0]['children'][0]['children'][0]['children']
-    [{'data': '.classpath', 'children': []}, {'data': '.project', 'children': []}]
-    >>> d['data'][0]['children'][0]['children'][0]['children'][0]
-    {'data': '.classpath', 'children': []}
-    >>> d['data'][0]['children'][0]['children'][0]['children'][1]
-    {'data': '.project', 'children': []}
+    >>> d[0]
+    {'data': 'editor', 'children': [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath'}, {'data': '.project'}]}]}]}
+    >>> d[0]['children']
+    [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath'}, {'data': '.project'}]}]}]
+    >>> d[0]['children'][0]
+    {'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath'}, {'data': '.project'}]}]}
+    >>> d[0]['children'][0]['children']
+    [{'data': '31', 'children': [{'data': '.classpath'}, {'data': '.project'}]}]
+    >>> d[0]['children'][0]['children'][0]
+    {'data': '31', 'children': [{'data': '.classpath'}, {'data': '.project'}]}
+    >>> d[0]['children'][0]['children'][0]['children']
+    [{'data': '.classpath'}, {'data': '.project'}]
+    >>> d[0]['children'][0]['children'][0]['children'][0]
+    {'data': '.classpath'}
+    >>> d[0]['children'][0]['children'][0]['children'][1]
+    {'data': '.project'}
     """
-    data = [self._root.children[k].jsonData() for k in sorted(self._root.children)]
-    return {'data':data}
+    return [self._root.children[k].jsonData() for k in sorted(self._root.children)]
