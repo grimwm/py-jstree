@@ -92,7 +92,6 @@ class JSTree(dictobj.DictionaryObject):
         Since our internal data structure is quite specific,
         only allow initialization by other JSTrees.
         """
-        # super(JSTree, self).__init__(tree)
         super(JSTree, self).__init__()
         self._items['_root'] = dictobj.DictionaryObject(tree._root)
       else:
