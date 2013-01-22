@@ -2,7 +2,7 @@ import dictobj
 import collections
 import os
 
-class JSTNode(dictobj.DictionaryObject):
+class Node(dictobj.DictionaryObject):
   """
   This class exists as a helper to the JSTree.  Its "jsonData" method can
   generate sub-tree JSON without putting the logic directly into the JSTree.
@@ -14,7 +14,7 @@ class JSTNode(dictobj.DictionaryObject):
   """
   def __init__(self, data, **kwargs):
     """
-    kwargs allows users to pass arbitrary information into a JSTNode that
+    kwargs allows users to pass arbitrary information into a Node that
     will later be output in jsonData().  It allows for more advanced
     configuration than the default path handling that JSTree currently allows.
     For example, users may want to pass "attr" or "metadata" or some other
@@ -22,20 +22,20 @@ class JSTNode(dictobj.DictionaryObject):
     
     Example:
       >>> import jstree
-      >>> node = jstree.JSTNode('a')
+      >>> node = jstree.Node('a')
       >>> print node
-      JSTNode({'data': 'a', 'children': MutableDictionaryObject({})})
+      Node({'data': 'a', 'children': MutableDictionaryObject({})})
 
       >>> import jstree
-      >>> node = jstree.JSTNode('a', attr={'id':23})
+      >>> node = jstree.Node('a', attr={'id':23})
       >>> print node
-      JSTNode({'data': 'a', 'children': MutableDictionaryObject({}), 'attr': DictionaryObject({'id': 23})})
+      Node({'data': 'a', 'children': MutableDictionaryObject({}), 'attr': DictionaryObject({'id': 23})})
     """
-    super(JSTNode, self).__init__()
+    super(Node, self).__init__()
 
     children = kwargs.get('children', {})
-    if len(filter(lambda key: not isinstance(children[key], JSTNode), children)):
-      raise TypeError("One or more children were not instances of '%s'" % JSTNode.__name__)
+    if len(filter(lambda key: not isinstance(children[key], Node), children)):
+      raise TypeError("One or more children were not instances of '%s'" % Node.__name__)
     if 'children' in kwargs:
       del kwargs['children']
     self._items['children'] = dictobj.MutableDictionaryObject(children)
@@ -77,12 +77,12 @@ class JSTree(dictobj.DictionaryObject):
       """
       super(JSTree, self).__init__()
       
-      root = JSTNode('')
+      root = Node('')
       for path in sorted(set(paths)):
         curr = root
         for subpath in path.split(os.path.sep):
           if subpath not in curr.children:
-            curr.children[subpath] = JSTNode(subpath)
+            curr.children[subpath] = Node(subpath)
           curr = curr.children[subpath]
       self._items['_root'] = root
 
