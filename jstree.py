@@ -21,12 +21,20 @@ class Node(dictobj.DictionaryObject):
     configuration than the default path handling that JSTree currently allows.
     For example, users may want to pass "attr" or "metadata" or some other
     valid jsTree options.
+
+    Note: If kwargs['metadata']['id'] exists and oid is not None, then
+          oid will tkae precedence.
     
     Example:
       >>> import jstree
       >>> node = jstree.Node('a', None)
       >>> print node
       Node({'data': 'a', 'children': MutableDictionaryObject({})})
+
+      >>> import jstree
+      >>> node = jstree.Node('a', None, metadata={'id':23})
+      >>> print node
+      Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 23})})
 
       >>> import jstree
       >>> node = jstree.Node('a', 200, metadata={'id':23})
