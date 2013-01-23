@@ -1,8 +1,8 @@
 import dictobj
-import collections
 import os
+from collections import namedtuple
 
-Path = collections.namedtuple('Path', ('path', 'id'))
+Path = namedtuple('Path', ('path', 'id'))
     
 class Node(dictobj.DictionaryObject):
   """
@@ -14,7 +14,7 @@ class Node(dictobj.DictionaryObject):
   tree out of paths.  Therefore, the children are not known in advance, and
   we have to keep the children attribute mutable.
   """
-  def __init__(self, data, **kwargs):
+  def __init__(self, path, id, **kwargs):
     """
     kwargs allows users to pass arbitrary information into a Node that
     will later be output in jsonData().  It allows for more advanced
@@ -29,9 +29,9 @@ class Node(dictobj.DictionaryObject):
       Node({'data': 'a', 'children': MutableDictionaryObject({})})
 
       >>> import jstree
-      >>> node = jstree.Node('a', attr={'id':23})
+      >>> node = jstree.Node('a', 200, metadata={'id':23})
       >>> print node
-      Node({'data': 'a', 'children': MutableDictionaryObject({}), 'attr': DictionaryObject({'id': 23})})
+      Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 200})})
     """
     super(Node, self).__init__()
 
@@ -41,16 +41,22 @@ class Node(dictobj.DictionaryObject):
     if 'children' in kwargs:
       del kwargs['children']
     self._items['children'] = dictobj.MutableDictionaryObject(children)
+
+    if id is not None:
+      metadata = kwargs.get('metadata', {})
+      metadata['id'] = id
+      kwargs['metadata'] = metadata
       
     self._items.update(dictobj.DictionaryObject(**kwargs))
-    self._items['data'] = data
+    self._items['data'] = path
 
   def jsonData(self):
     children = [self.children[k].jsonData() for k in sorted(self.children)]
+    output = dict(self._items)
+    del output['children']
     if len(children):
-      return {'data':self.data, 'children':children}
-    else:
-      return {'data':self.data}
+      output['children'] = children
+    return output
 
 class JSTree(dictobj.DictionaryObject):
   """
@@ -78,7 +84,7 @@ class JSTree(dictobj.DictionaryObject):
     root = Node('', **kwargs)
     for path in sorted(set(paths)):
       curr = root
-      for subpath in path.split(os.path.sep):
+      for subpath in path.path.split(os.path.sep):
         if subpath not in curr.children:
           curr.children[subpath] = Node(subpath, **kwargs)
         curr = curr.children[subpath]
@@ -91,7 +97,7 @@ class JSTree(dictobj.DictionaryObject):
     
     Example:
     >>> import jstree
-    >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
+    >>> paths = [Path("editor/2012-07/31/.classpath", 1), Path("editor/2012-07/31/.project", 2)]
     >>> print jstree.JSTree(paths).pretty()
     /
       editor/
@@ -117,7 +123,7 @@ class JSTree(dictobj.DictionaryObject):
 
     Examples:
     >>> import jstree
-    >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
+    >>> paths = [Path("editor/2012-07/31/.classpath", 1), Path("editor/2012-07/31/.project", 2)]
     >>> t = jstree.JSTree(paths)
     >>> d = t.jsonData()
     >>> print d
