@@ -1,6 +1,17 @@
 Changes
 =======
 
+v0.3
+====
+* Enhanced JSTree so it can add IDs to leaf nodes for selection in
+  a jsTree.  Although, this may need more work after testing in
+  a jsTree application.
+* Updated all the doctests to handle the additional burden
+  of users being able to pass in arbitrary attributes and
+  "path object ids".
+* Removed ability to copy JSTrees directly in __init__ since it's
+  not actually a use-case right now.  Trying to avoid code smells.
+
 v0.2
 ====
 * Started updating the changelog, finally.

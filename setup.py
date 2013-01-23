@@ -14,7 +14,7 @@ def read(filename):
 
 setup(
   name='jstree',
-  version='0.2',
+  version='0.3',
   author='William Grim',
   author_email='william@grimapps.com',
   url='https://github.com/grimwm/py-jstree',
