@@ -25,7 +25,22 @@ of a few things:
 Examples
 --------
     >>> import jstree
-    >>> paths = ["editor/2012-07/31/.classpath", "editor/2012-07/31/.project"]
+    >>> node = jstree.Node('a', None)
+    >>> print node
+    Node({'data': 'a', 'children': MutableDictionaryObject({})})
+
+    >>> import jstree
+    >>> node = jstree.Node('a', None, metadata={'id':23})
+    >>> print node
+    Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 23})})
+
+    >>> import jstree
+    >>> node = jstree.Node('a', 200, metadata={'id':23})
+    >>> print node
+    Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 200})})
+    
+    >>> import jstree
+    >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
     >>> print jstree.JSTree(paths).pretty()
     /
       editor/
@@ -33,3 +48,16 @@ Examples
           31/
             .classpath
             .project
+            
+    >>> import jstree
+    >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
+    >>> t = jstree.JSTree(paths)
+    >>> d = t.jsonData()
+    >>> print d
+    [{'data': 'editor', 'children': [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'metadata': {'id': 1}}, {'data': '.project', 'metadata': {'id': 2}}]}]}]}]
+    >>> print d[0]['children'][0]['children'][0]['children'][1]
+    {'data': '.project', 'metadata': {'id': 2}}
+    >>> print d[0]['children'][0]['children'][0]['children'][1]['data']
+    .project
+    >>> print d[0]['children'][0]['children'][0]['children'][1]['metadata']['id']
+    2
