@@ -27,18 +27,24 @@ Examples
     >>> import jstree
     >>> node = jstree.Node('a', None)
     >>> print node
-    Node({'data': 'a', 'children': MutableDictionaryObject({})})
+    Node({'text': 'a', 'children': MutableDictionaryObject({})})
+    >>> print node.jsonData()
+    {'text': 'a'}
 
     >>> import jstree
-    >>> node = jstree.Node('a', None, metadata={'id':23})
+    >>> node = jstree.Node('a', 1)
     >>> print node
-    Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 23})})
+    Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionyObject({'id': 1}), 'id': 1})
+    >>> print node.jsonData()
+    {'text': 'a', 'id': 1, 'li_attr': {'id': 1}}
 
     >>> import jstree
-    >>> node = jstree.Node('a', 200, metadata={'id':23})
+    >>> node = jstree.Node('a', 5, icon="folder", state = {'opened': True})
     >>> print node
-    Node({'data': 'a', 'children': MutableDictionaryObject({}), 'metadata': DictionaryObject({'id': 200})})
-    
+    Node({'text': 'a', 'id': 5, 'state': DictionaryObject({'opened': True}), 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 5}), 'icon': 'folder'})
+    >>> print node.jsonData()
+    {'text': 'a', 'state': {'opened': True}, 'id': 5, 'li_attr': {'id': 5}, 'icon': 'folder'}
+
     >>> import jstree
     >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
     >>> print jstree.JSTree(paths).pretty()
@@ -48,7 +54,7 @@ Examples
           31/
             .classpath
             .project
-            
+
     >>> import jstree
     >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
     >>> t = jstree.JSTree(paths)
