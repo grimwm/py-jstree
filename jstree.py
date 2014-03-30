@@ -22,7 +22,7 @@ class Node(dictobj.DictionaryObject):
         kwargs allows users to pass arbitrary information into a Node that
         will later be output in jsonData().  It allows for more advanced
         configuration than the default path handling that JSTree currently allows.
-        For example, users may want to pass "attr"or some other valid jsTree options.
+        For example, users may want to pass "attr" or some other valid jsTree options.
 
         Example:
           >>> import jstree
@@ -35,7 +35,7 @@ class Node(dictobj.DictionaryObject):
           >>> import jstree
           >>> node = jstree.Node('a', 1)
           >>> print node
-          Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionyObject({'id': 1}), 'id': 1})
+          Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 1}), 'id': 1})
           >>> print node.jsonData()
           {'text': 'a', 'id': 1, 'li_attr': {'id': 1}}
 
@@ -61,10 +61,6 @@ class Node(dictobj.DictionaryObject):
             li_attr['id'] = oid
             kwargs['li_attr'] = li_attr
             self._items['id'] = oid
-
-        # for key in ('id', 'icon', 'li_attr', 'a_attr', 'state'):
-        #     if key in kwargs:
-        #         self._items[key] = kwargs[key]
 
         self._items.update(dictobj.DictionaryObject(**kwargs))
         self._items['text'] = path
