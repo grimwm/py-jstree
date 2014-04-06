@@ -80,7 +80,6 @@ class Node(dictobj.DictionaryObject):
 
 
 class JSTree(dictobj.DictionaryObject):
-
   """
   An immutable dictionary-like object that converts a list of "paths"
   into a tree structure suitable for jQuery's jsTree.
