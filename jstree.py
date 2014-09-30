@@ -7,10 +7,10 @@ Path = namedtuple('Path', ('path', 'id'))
 
 class Node(dictobj.DictionaryObject):
   """
-  This class exists as a helper to the JSTree.  Its "jsonData" method can
-  generate sub-tree JSON without putting the logic directly into the JSTree.
+  This class exists as a helper to the jsTree.  Its "jsonData" method can
+  generate sub-tree JSON without putting the logic directly into the jsTree.
 
-  This data structure is only semi-immutable.  The JSTree uses a directly
+  This data structure is only semi-immutable.  The jsTree uses a directly
   iterative (i.e. no stack is managed) builder pattern to construct a
   tree out of paths.  Therefore, the children are not known in advance, and
   we have to keep the children attribute mutable.
@@ -20,7 +20,7 @@ class Node(dictobj.DictionaryObject):
     """
     kwargs allows users to pass arbitrary information into a Node that
     will later be output in jsonData().  It allows for more advanced
-    configuration than the default path handling that JSTree currently allows.
+    configuration than the default path handling that jsTree currently allows.
     For example, users may want to pass "attr" or some other valid jsTree options.
 
     Example:
@@ -34,16 +34,16 @@ class Node(dictobj.DictionaryObject):
       >>> import jstree
       >>> node = jstree.Node('a', 1)
       >>> print node
-      Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 1}), 'id': 1})
+      Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 1})})
       >>> print node.jsonData()
-      {'text': 'a', 'id': 1, 'li_attr': {'id': 1}}
+      {'text': 'a', 'li_attr': {'id': 1}}
 
       >>> import jstree
       >>> node = jstree.Node('a', 5, icon="folder", state = {'opened': True})
       >>> print node
-      Node({'text': 'a', 'id': 5, 'state': DictionaryObject({'opened': True}), 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 5}), 'icon': 'folder'})
+      Node({'text': 'a', 'state': DictionaryObject({'opened': True}), 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 5}), 'icon': 'folder'})
       >>> print node.jsonData()
-      {'text': 'a', 'state': {'opened': True}, 'id': 5, 'li_attr': {'id': 5}, 'icon': 'folder'}
+      {'text': 'a', 'state': {'opened': True}, 'li_attr': {'id': 5}, 'icon': 'folder'}
     """
     super(Node, self).__init__()
 
@@ -59,7 +59,6 @@ class Node(dictobj.DictionaryObject):
       li_attr = kwargs.get('li_attr', {})
       li_attr['id'] = oid
       kwargs['li_attr'] = li_attr
-      self._items['id'] = oid
 
     self._items.update(dictobj.DictionaryObject(**kwargs))
     self._items['text'] = path
@@ -98,7 +97,7 @@ class JSTree(dictobj.DictionaryObject):
       >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
       >>> t1 = jstree.JSTree(paths)
       >>> print t1.jsonData()
-      [{'text': 'editor/2012-07/31/.classpath', 'id': 1, 'li_attr': {'id': 1}}, {'text': 'editor/2012-07/31/.project', 'id': 2, 'li_attr': {'id': 2}}]
+      [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
     """
     if len(filter(lambda p: not isinstance(p, Path), paths)):
       raise TypeError(
@@ -128,10 +127,10 @@ class JSTree(dictobj.DictionaryObject):
     >>> print jstree.JSTree(paths).pretty()
     /
       editor/
-      2012-07/
-        31/
-        .classpath
-        .project
+        2012-07/
+          31/
+            .classpath
+            .project
     """
     if root is None:
       root = self._root
@@ -154,12 +153,12 @@ class JSTree(dictobj.DictionaryObject):
     >>> t = jstree.JSTree(paths)
     >>> d = t.jsonData()
     >>> print d
-    [{'data': 'editor', 'children': [{'data': '2012-07', 'children': [{'data': '31', 'children': [{'data': '.classpath', 'metadata': {'id': 1}}, {'data': '.project', 'metadata': {'id': 2}}]}]}]}]
+    [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
     >>> print d[0]['children'][0]['children'][0]['children'][1]
-    {'data': '.project', 'metadata': {'id': 2}}
-    >>> print d[0]['children'][0]['children'][0]['children'][1]['data']
+    {'text': '.project', 'li_attr': {'id': 2}}
+    >>> print d[0]['children'][0]['children'][0]['children'][1]['text']
     .project
-    >>> print d[0]['children'][0]['children'][0]['children'][1]['metadata']['id']
+    >>> print d[0]['children'][0]['children'][0]['children'][1]['li_attr']['id']
     2
     """
     return [self._root.children[k].jsonData() for k in sorted(self._root.children)]
