@@ -14,12 +14,12 @@ def read(filename):
 
 setup(
   name='jstree',
-  version='0.3',
+  version='0.4',
   author='William Grim',
   author_email='william@grimapps.com',
   url='https://github.com/grimwm/py-jstree',
   classifiers = [
-    'Development Status :: 2 - Pre-Alpha',
+    'Development Status :: 4 - Beta',
     'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',

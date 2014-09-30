@@ -1,6 +1,11 @@
 Changes
 =======
 
+v0.4
+====
+* Removed the 'id' tag from general data.
+* Renamed 'metadata' to 'li_attr'.
+
 v0.3
 ====
 * Enhanced JSTree so it can add IDs to leaf nodes for selection in
