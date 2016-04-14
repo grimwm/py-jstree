@@ -1,6 +1,10 @@
 Changes
 =======
 
+v0.5
+====
+* Add Python 3 support.
+
 v0.4
 ====
 * Removed the 'id' tag from general data.
