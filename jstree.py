@@ -24,31 +24,33 @@ class Node(dictobj.DictionaryObject):
     For example, users may want to pass "attr" or some other valid jsTree options.
 
     Example:
-      >>> import jstree
-      >>> node = jstree.Node('a', None)
-      >>> print node
-      Node({'text': 'a', 'children': MutableDictionaryObject({})})
-      >>> print node.jsonData()
-      {'text': 'a'}
+      >>> from dictobj import *
+      >>> node = Node('a', None)
+      >>> node._items == {'text': 'a', 'children': MutableDictionaryObject({})}
+      True
+      >>> node.jsonData() == {'text': 'a'}
+      True
 
       >>> import jstree
+      >>> from dictobj import *
       >>> node = jstree.Node('a', 1)
-      >>> print node
-      Node({'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 1})})
-      >>> print node.jsonData()
-      {'text': 'a', 'li_attr': {'id': 1}}
+      >>> node._items == {'text': 'a', 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 1})}
+      True
+      >>> d = node.jsonData()
+      >>> d == {'text': 'a', 'li_attr': {'id': 1}}
+      True
 
       >>> import jstree
       >>> node = jstree.Node('a', 5, icon="folder", state = {'opened': True})
-      >>> print node
-      Node({'text': 'a', 'state': DictionaryObject({'opened': True}), 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 5}), 'icon': 'folder'})
-      >>> print node.jsonData()
-      {'text': 'a', 'state': {'opened': True}, 'li_attr': {'id': 5}, 'icon': 'folder'}
+      >>> node._items == {'text': 'a', 'state': DictionaryObject({'opened': True}), 'children': MutableDictionaryObject({}), 'li_attr': DictionaryObject({'id': 5}), 'icon': 'folder'}
+      True
+      >>> node.jsonData() == {'text': 'a', 'state': {'opened': True}, 'li_attr': {'id': 5}, 'icon': 'folder'}
+      True
     """
     super(Node, self).__init__()
 
     children = kwargs.get('children', {})
-    if len(filter(lambda key: not isinstance(children[key], Node), children)):
+    if any(filter(lambda key: not isinstance(children[key], Node), children)):
       raise TypeError(
         "One or more children were not instances of '%s'" % Node.__name__)
     if 'children' in kwargs:
@@ -96,10 +98,10 @@ class JSTree(dictobj.DictionaryObject):
       >>> import jstree
       >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
       >>> t1 = jstree.JSTree(paths)
-      >>> print t1.jsonData()
-      [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
+      >>> t1.jsonData() == [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
+      True
     """
-    if len(filter(lambda p: not isinstance(p, Path), paths)):
+    if any(filter(lambda p: not isinstance(p, Path), paths)):
       raise TypeError(
         "All paths must be instances of '%s'" % Path.__name__)
 
@@ -124,7 +126,7 @@ class JSTree(dictobj.DictionaryObject):
     Example:
     >>> import jstree
     >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
-    >>> print jstree.JSTree(paths).pretty()
+    >>> print(jstree.JSTree(paths).pretty())
     /
       editor/
         2012-07/
@@ -136,7 +138,7 @@ class JSTree(dictobj.DictionaryObject):
       root = self._root
     fmt = "%s%s/" if root.children else "%s%s"
     s = fmt % (" " * depth * spacing, root.text)
-    for child in root.children:
+    for child in sorted(root.children):
       child = root.children[child]
       s += "\n%s" % self.pretty(child, depth + 1, spacing)
     return s
@@ -152,13 +154,13 @@ class JSTree(dictobj.DictionaryObject):
     >>> paths = [jstree.Path("editor/2012-07/31/.classpath", 1), jstree.Path("editor/2012-07/31/.project", 2)]
     >>> t = jstree.JSTree(paths)
     >>> d = t.jsonData()
-    >>> print d
-    [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
-    >>> print d[0]['children'][0]['children'][0]['children'][1]
-    {'text': '.project', 'li_attr': {'id': 2}}
-    >>> print d[0]['children'][0]['children'][0]['children'][1]['text']
-    .project
-    >>> print d[0]['children'][0]['children'][0]['children'][1]['li_attr']['id']
+    >>> d == [{'text': 'editor', 'children': [{'text': '2012-07', 'children': [{'text': '31', 'children': [{'text': '.classpath', 'li_attr': {'id': 1}}, {'text': '.project', 'li_attr': {'id': 2}}]}]}]}]
+    True
+    >>> d[0]['children'][0]['children'][0]['children'][1] == {'text': '.project', 'li_attr': {'id': 2}}
+    True
+    >>> d[0]['children'][0]['children'][0]['children'][1]['text'] == '.project'
+    True
+    >>> d[0]['children'][0]['children'][0]['children'][1]['li_attr']['id']
     2
     """
     return [self._root.children[k].jsonData() for k in sorted(self._root.children)]
